@@ -74,6 +74,23 @@ nav button {
   transition: background 0.2s;
 }
 
+nav .nav-app-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  color: white;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+nav .nav-app-link:hover,
+nav .nav-app-link:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 nav button:hover,
 nav button.active {
   background: rgba(255, 255, 255, 0.2);
@@ -523,6 +540,56 @@ textarea {
   outline: none;
   border-color: var(--primary-light);
   box-shadow: 0 0 0 3px rgba(54, 132, 91, 0.14);
+}
+
+.camera-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.camera-button {
+  min-height: 38px;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--primary-light);
+  border-radius: 4px;
+  background: var(--primary-light);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.camera-button-secondary {
+  border-color: var(--border);
+  background: white;
+  color: var(--text);
+}
+
+.camera-panel,
+.evidence-preview {
+  margin-top: 0.75rem;
+}
+
+.camera-feed,
+.evidence-preview img,
+.evidence-preview video {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  border-radius: 4px;
+  background: #17221b;
+  object-fit: contain;
+}
+
+.evidence-status {
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+#report-form [hidden] {
+  display: none;
 }
 
 #report-form .btn-submit {

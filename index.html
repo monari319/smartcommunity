@@ -15,6 +15,10 @@
       <span>Smart Community Portal</span>
     </div>
     <nav>
+      <a id="download-android-app" class="nav-app-link" href="./community-portal.apk" download="community-portal.apk" aria-label="Download the Community Portal Android app">
+        <span aria-hidden="true">↓</span>
+        <span>Download Android app</span>
+      </a>
       <button id="nav-resident" class="active" onclick="switchView('resident')" hidden>Resident Portal</button>
       <button id="nav-admin" onclick="switchView('admin')" hidden>Admin Dashboard</button>
       <button id="nav-logout" onclick="handleLogout()" hidden>Logout</button>
@@ -162,8 +166,27 @@
               <textarea id="rep-desc" required placeholder="Detailed explanation of the issue..."></textarea>
             </div>
             <div class="form-group">
-              <label>Photo Evidence (Optional)</label>
-              <input type="file" id="rep-photo" accept="image/*" />
+              <label for="rep-photo">Photo or Video Evidence (Must)</label>
+              <input type="file" id="rep-photo" accept="image/*,video/*" capture="environment" />
+              <input type="file" id="rep-video" accept="video/*" hidden />
+              <div class="camera-actions">
+                <button type="button" id="video-upload-button" class="camera-button">Upload video</button>
+                <button type="button" id="camera-open" class="camera-button">Use camera</button>
+              </div>
+              <div id="camera-panel" class="camera-panel" hidden>
+                <video id="camera-feed" class="camera-feed" autoplay muted playsinline aria-label="Live camera preview"></video>
+                <div class="camera-actions">
+                  <button type="button" id="camera-photo" class="camera-button">Take photo</button>
+                  <button type="button" id="camera-record" class="camera-button">Record video</button>
+                  <button type="button" id="camera-stop-recording" class="camera-button" hidden>Stop recording</button>
+                  <button type="button" id="camera-close" class="camera-button camera-button-secondary">Close camera</button>
+                </div>
+              </div>
+              <p id="evidence-status" class="evidence-status" aria-live="polite"></p>
+              <div id="evidence-preview" class="evidence-preview" hidden>
+                <img id="evidence-image-preview" alt="Selected evidence preview" hidden />
+                <video id="evidence-video-preview" controls playsinline hidden></video>
+              </div>
             </div>
             <button type="submit" class="btn-submit">Submit Report</button>
           </form>
@@ -248,6 +271,7 @@
                 <th>Category</th>
                 <th>Location</th>
                 <th>Submitted By</th>
+                <th>Evidence</th>
                 <th>Status</th>
                 <th>Action State</th>
                 <th>Delete</th>

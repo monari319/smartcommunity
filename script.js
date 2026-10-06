@@ -19,6 +19,11 @@ let heroSlideshowTimer = null;
 
 let mockUsers = [];
 let mockReports = [];
+let reportCameraStream = null;
+let reportMediaRecorder = null;
+let reportVideoChunks = [];
+let reportEvidenceFile = null;
+let reportEvidencePreviewUrl = null;
 
 // --- Core Navigation ---
 function switchView(viewName) {
@@ -107,6 +112,16 @@ async function handleReportSubmit(e) {
 
   const form = document.getElementById('report-form');
   const submitButton = form.querySelector('[type="submit"]');
+  if (reportMediaRecorder?.state === 'recording') {
+    alert('Stop the video recording before submitting the report.');
+    return;
+  }
+  const evidenceFile = reportEvidenceFile || document.getElementById('rep-photo').files[0];
+  if (!evidenceFile) {
+    alert('Add a photo or video as evidence before submitting the report.');
+    document.getElementById('video-upload-button').focus();
+    return;
+  }
   const coordinates = document.getElementById('rep-coords').value.trim();
   let latitude = null;
   let longitude = null;
@@ -122,16 +137,15 @@ async function handleReportSubmit(e) {
 
   submitButton.disabled = true;
   try {
-    let imageUrl = null;
-    const imageFile = document.getElementById('rep-photo').files[0];
-    if (imageFile) {
-      const safeName = imageFile.name.replace(/[^\w.-]/g, '_');
+    let evidenceUrl = null;
+    if (evidenceFile) {
+      const safeName = evidenceFile.name.replace(/[^\w.-]/g, '_');
       const filePath = `${currentUser.id}/${crypto.randomUUID()}-${safeName}`;
       const { error: uploadError } = await supabaseClient.storage
         .from('report-images')
-        .upload(filePath, imageFile);
+        .upload(filePath, evidenceFile, { contentType: evidenceFile.type });
       if (uploadError) throw uploadError;
-      imageUrl = supabaseClient.storage.from('report-images').getPublicUrl(filePath).data.publicUrl;
+      evidenceUrl = supabaseClient.storage.from('report-images').getPublicUrl(filePath).data.publicUrl;
     }
 
     const { data, error } = await supabaseClient.from('reports').insert({
@@ -142,12 +156,13 @@ async function handleReportSubmit(e) {
       latitude,
       longitude,
       description: document.getElementById('rep-desc').value.trim(),
-      image_url: imageUrl
+      image_url: evidenceUrl
     }).select().single();
     if (error) throw error;
 
     mockReports.unshift({ ...data, userEmail: currentUser.email });
     form.reset();
+    resetReportEvidence();
     renderResidentDashboard();
     alert('Report saved successfully.');
   } catch (error) {
@@ -156,6 +171,115 @@ async function handleReportSubmit(e) {
   } finally {
     submitButton.disabled = false;
   }
+}
+
+function setReportEvidence(file) {
+  reportEvidenceFile = file;
+  if (reportEvidencePreviewUrl) URL.revokeObjectURL(reportEvidencePreviewUrl);
+  reportEvidencePreviewUrl = URL.createObjectURL(file);
+
+  const isVideo = file.type.startsWith('video/');
+  const preview = document.getElementById('evidence-preview');
+  const imagePreview = document.getElementById('evidence-image-preview');
+  const videoPreview = document.getElementById('evidence-video-preview');
+  preview.hidden = false;
+  imagePreview.hidden = isVideo;
+  videoPreview.hidden = !isVideo;
+  if (isVideo) videoPreview.src = reportEvidencePreviewUrl;
+  else imagePreview.src = reportEvidencePreviewUrl;
+  document.getElementById('evidence-status').textContent = `Evidence ready: ${file.name}`;
+}
+
+async function openReportCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    document.getElementById('evidence-status').textContent = 'Camera access is unavailable. Use HTTPS or localhost, or choose a file instead.';
+    return;
+  }
+
+  try {
+    reportCameraStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: 'environment' } }
+    });
+    document.getElementById('camera-feed').srcObject = reportCameraStream;
+    document.getElementById('camera-panel').hidden = false;
+    document.getElementById('evidence-status').textContent = 'Camera is ready. Take a photo or record a video.';
+  } catch (error) {
+    console.error('Camera access failed:', error);
+    document.getElementById('evidence-status').textContent = 'Camera access was blocked or unavailable. Check browser permissions, or choose a file instead.';
+  }
+}
+
+async function captureReportPhoto() {
+  const feed = document.getElementById('camera-feed');
+  if (!feed.videoWidth || !feed.videoHeight) {
+    document.getElementById('evidence-status').textContent = 'Wait for the camera preview before taking a photo.';
+    return;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = feed.videoWidth;
+  canvas.height = feed.videoHeight;
+  canvas.getContext('2d').drawImage(feed, 0, 0);
+  const photoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+  if (!photoBlob) {
+    document.getElementById('evidence-status').textContent = 'The photo could not be captured. Please try again.';
+    return;
+  }
+
+  document.getElementById('rep-photo').value = '';
+  setReportEvidence(new File([photoBlob], `report-photo-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+}
+
+function startReportVideoRecording() {
+  if (!reportCameraStream || !window.MediaRecorder) {
+    document.getElementById('evidence-status').textContent = 'Video recording is not supported by this browser.';
+    return;
+  }
+
+  const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+    .find(type => MediaRecorder.isTypeSupported(type));
+  reportVideoChunks = [];
+  reportMediaRecorder = new MediaRecorder(reportCameraStream, mimeType ? { mimeType } : undefined);
+  reportMediaRecorder.addEventListener('dataavailable', event => {
+    if (event.data.size) reportVideoChunks.push(event.data);
+  });
+  reportMediaRecorder.addEventListener('stop', () => {
+    const type = reportMediaRecorder.mimeType || 'video/webm';
+    const extension = type.includes('mp4') ? 'mp4' : 'webm';
+    const video = new File(reportVideoChunks, `report-video-${Date.now()}.${extension}`, { type });
+    reportVideoChunks = [];
+    document.getElementById('rep-photo').value = '';
+    setReportEvidence(video);
+    document.getElementById('camera-record').hidden = false;
+    document.getElementById('camera-stop-recording').hidden = true;
+  }, { once: true });
+  reportMediaRecorder.start();
+  document.getElementById('camera-record').hidden = true;
+  document.getElementById('camera-stop-recording').hidden = false;
+  document.getElementById('evidence-status').textContent = 'Recording video. Select Stop recording when finished.';
+}
+
+function stopReportCamera() {
+  if (reportMediaRecorder?.state === 'recording') reportMediaRecorder.stop();
+  reportCameraStream?.getTracks().forEach(track => track.stop());
+  reportCameraStream = null;
+  document.getElementById('camera-feed').srcObject = null;
+  document.getElementById('camera-panel').hidden = true;
+}
+
+function resetReportEvidence() {
+  stopReportCamera();
+  reportMediaRecorder = null;
+  reportEvidenceFile = null;
+  if (reportEvidencePreviewUrl) URL.revokeObjectURL(reportEvidencePreviewUrl);
+  reportEvidencePreviewUrl = null;
+  document.getElementById('evidence-preview').hidden = true;
+  document.getElementById('evidence-image-preview').removeAttribute('src');
+  document.getElementById('evidence-video-preview').removeAttribute('src');
+  document.getElementById('evidence-status').textContent = '';
+  document.getElementById('camera-record').hidden = false;
+  document.getElementById('camera-stop-recording').hidden = true;
 }
 
 function renderResidentDashboard() {
@@ -208,6 +332,7 @@ function renderAdminReports() {
       <td>${r.category}</td>
       <td>${r.location}</td>
       <td><small>${r.userEmail}</small></td>
+      <td>${r.image_url ? `<a href="${r.image_url}" target="_blank" rel="noopener noreferrer">Open evidence</a>` : '—'}</td>
       <td><span class="badge badge-${getBadgeClass(r.status)}">${r.status}</span></td>
       <td>
         <select onchange="updateReportStatus('${r.id}', this.value)">
@@ -222,7 +347,7 @@ function renderAdminReports() {
         <button class="btn-delete" onclick="deleteReport('${r.id}')">Delete</button>
       </td>
     </tr>
-  `).join('') || `<tr><td colspan="8" style="text-align:center;">No matching reports found.</td></tr>`;
+  `).join('') || `<tr><td colspan="9" style="text-align:center;">No matching reports found.</td></tr>`;
 }
 
 function renderResidentsDirectory() {
@@ -495,6 +620,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const assistantClose = document.getElementById('assistant-close');
 
   assistantForm.addEventListener('submit', handleAssistantSubmit);
+  document.getElementById('camera-open').addEventListener('click', openReportCamera);
+  document.getElementById('video-upload-button').addEventListener('click', () => {
+    document.getElementById('rep-video').click();
+  });
+  document.getElementById('rep-video').addEventListener('change', event => {
+    const file = event.target.files[0];
+    if (file) setReportEvidence(file);
+    event.target.value = '';
+  });
+  document.getElementById('camera-photo').addEventListener('click', captureReportPhoto);
+  document.getElementById('camera-record').addEventListener('click', startReportVideoRecording);
+  document.getElementById('camera-stop-recording').addEventListener('click', () => reportMediaRecorder?.stop());
+  document.getElementById('camera-close').addEventListener('click', stopReportCamera);
+  document.getElementById('rep-photo').addEventListener('change', event => {
+    const file = event.target.files[0];
+    if (file) setReportEvidence(file);
+    else resetReportEvidence();
+  });
   assistantToggle.addEventListener('click', () => setAssistantOpen(true));
   assistantClose.addEventListener('click', () => {
     setAssistantOpen(false);
