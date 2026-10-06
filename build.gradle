@@ -1,3 +1,19 @@
 plugins {
-    id 'com.android.application' version '8.7.3' apply false
+    id 'com.android.application'
+}
+
+def webAppUrl = System.getenv('WEB_APP_URL') ?: 'https://example.invalid/'
+
+android {
+    namespace 'com.smartcommunity.portal'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.smartcommunity.portal'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'WEB_APP_URL', "\"${webAppUrl}\""
+    }
 }
