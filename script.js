@@ -161,10 +161,16 @@ async function handleReportSubmit(e) {
     if (error) throw error;
 
     mockReports.unshift({ ...data, userEmail: currentUser.email });
+    const { error: notificationError } = await supabaseClient.functions.invoke('report-notification', {
+      body: { reportId: data.id }
+    });
     form.reset();
     resetReportEvidence();
     renderResidentDashboard();
-    alert('Report saved successfully.');
+    alert(notificationError
+      ? 'Report saved successfully, but the email notification could not be sent.'
+      : 'Report saved successfully.');
+    if (notificationError) console.error('Report email notification failed:', notificationError);
   } catch (error) {
     console.error('Report submission failed:', error);
     alert(`Report could not be saved: ${getSupabaseErrorMessage(error)}`);

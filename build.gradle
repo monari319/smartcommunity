@@ -2,11 +2,15 @@ plugins {
     id 'com.android.application'
 }
 
-def webAppUrl = System.getenv('WEB_APP_URL') ?: 'https://example.invalid/'
+def webAppUrl = System.getenv('WEB_APP_URL') ?: 'https://monari319.github.io/smartcommunity/'
 
 android {
     namespace 'com.smartcommunity.portal'
     compileSdk 35
+
+    buildFeatures {
+        buildConfig true
+    }
 
     defaultConfig {
         applicationId 'com.smartcommunity.portal'
