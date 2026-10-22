@@ -17,10 +17,13 @@
     <nav>
       <a id="download-android-app" class="nav-app-link" href="./community-portal.apk" download="community-portal.apk" aria-label="Download the Community Portal Android app">
         <span aria-hidden="true">↓</span>
-        <span>Download Android app</span>
+        <span>App</span>
       </a>
       <button id="nav-resident" class="active" onclick="switchView('resident')" hidden>Resident Portal</button>
-      <button id="nav-admin" onclick="switchView('admin')" hidden>Admin Dashboard</button>
+      <button id="nav-admin" class="nav-admin-button" onclick="switchView('admin')" aria-label="Open administration dashboard" hidden>
+        <span aria-hidden="true">⚙</span>
+        <span>Administration</span>
+      </button>
       <button id="nav-logout" onclick="handleLogout()" hidden>Logout</button>
     </nav>
   </header>
@@ -28,43 +31,44 @@
   <main>
     <div id="view-auth" class="view active">
       <section id="auth-welcome" class="card auth-welcome">
-        <img id="hero-image-primary" class="hero-image is-visible" src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=85" alt="" aria-hidden="true" />
-        <img id="hero-image-secondary" class="hero-image" alt="" aria-hidden="true" />
+        <img id="hero-image-primary" class="hero-image is-visible" src="https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=2400&q=85" alt="" aria-hidden="true" />
+        <img id="hero-image-secondary" class="hero-image" src="https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=2400&q=85" alt="" aria-hidden="true" />
         <div class="hero-content">
-          <span class="hero-eyebrow">A cleaner community starts with us</span>
-          <h1>Small actions.<br />A brighter, greener future.</h1>
-          <p>When we come together, our neighborhoods can thrive. Share what needs attention, care for the places we call home, and help build a cleaner community for everyone.</p>
+          <span class="hero-eyebrow">SMART COMMUNITY PORTAL</span>
+          <h1>A better community starts with being heard.</h1>
+          <p>Report local concerns, follow their progress, and work together to make your neighborhood safer and stronger.</p>
+          <div class="hero-project-promo">
+            <span>ONE COMMUNITY. CLEARER ACTION.</span>
+            <p>Share an issue with your community team and stay informed as it moves from submission to resolution.</p>
+          </div>
           <div class="auth-actions">
             <button type="button" class="btn-submit" onclick="showAuthForm('register')">Create an account</button>
             <button type="button" class="btn-submit btn-login-choice" onclick="showAuthForm('login')">Log in</button>
-          </div>
-          <div class="hero-project-promo">
-            <span>COMMUNITY PROJECTS, REAL CHANGE</span>
-            <p>Cleaner parks, safer streets, greener shared spaces. Together, local projects turn good ideas into lasting improvements. Join in and help make it happen.</p>
+            <button type="button" class="btn-submit btn-administration-choice" onclick="showAdminRegistration()">Administration</button>
           </div>
         </div>
       </section>
 
       <div id="auth-forms" class="auth-forms" hidden>
-        <div id="register-panel" class="card auth-card" hidden>
-          <span class="auth-eyebrow">JOIN YOUR COMMUNITY</span>
+        <div id="register-panel" class="card auth-card snake-light-frame" hidden>
+          <span class="auth-eyebrow">SMART COMMUNITY PORTAL</span>
           <h2>Create your account</h2>
-          <p class="auth-intro">Be part of the effort to build a cleaner, better neighborhood for everyone.</p>
+          <p class="auth-intro">Register as a resident to report local issues and track their progress.</p>
           <form id="register-form" onsubmit="handleRegister(event)">
             <div class="form-group">
-              <label>Full Name</label>
-              <input type="text" id="reg-name" required placeholder="e.g. Jane Doe" />
+              <label for="reg-name">Full Name</label>
+              <input type="text" id="reg-name" autocomplete="name" required />
             </div>
             <div class="form-group">
-              <label>Phone Number</label>
-              <input type="tel" id="reg-phone" required placeholder="e.g. +254 700 000000" />
+              <label for="reg-email">Email Address</label>
+              <input type="email" id="reg-email" autocomplete="email" required placeholder="jane@example.com" />
             </div>
             <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="reg-email" required placeholder="jane@example.com" />
+              <label for="reg-phone">Phone Number</label>
+              <input type="tel" id="reg-phone" autocomplete="tel" required />
             </div>
             <div class="form-group">
-              <label>Password</label>
+              <label for="reg-pass">Password</label>
               <input type="password" id="reg-pass" autocomplete="new-password" required />
             </div>
             <div class="form-group">
@@ -76,21 +80,21 @@
           <button type="button" class="auth-back" onclick="showAuthWelcome()">Back to welcome</button>
         </div>
 
-        <div id="login-panel" class="card auth-card" hidden>
+        <div id="login-panel" class="card auth-card snake-light-frame" hidden>
           <span class="auth-eyebrow">SMART COMMUNITY PORTAL</span>
           <h2>Welcome back</h2>
           <p class="auth-intro">Sign in to keep up with your neighborhood and the issues that matter.</p>
           <form id="login-form" onsubmit="handleLogin(event)">
             <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="login-email" required placeholder="user@example.com" />
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" autocomplete="email" required placeholder="user@example.com" />
             </div>
             <div class="form-group">
-              <label>Password</label>
-              <input type="password" id="login-pass" required />
+              <label for="login-pass">Password</label>
+              <input type="password" id="login-pass" autocomplete="current-password" required />
             </div>
             <div class="form-group">
-              <label>Login As Role</label>
+              <label for="login-role">Login As Role</label>
               <select id="login-role">
                 <option value="resident">Resident</option>
                 <option value="admin">Administrator</option>
@@ -98,6 +102,38 @@
             </div>
             <button type="submit" class="btn-submit">Login</button>
           </form>
+          <button type="button" class="auth-back" onclick="showAuthWelcome()">Back to welcome</button>
+        </div>
+
+        <div id="admin-access-panel" class="card auth-card snake-light-frame" hidden>
+          <span class="auth-eyebrow">ADMINISTRATOR ACCESS</span>
+          <h2>Create your administrator account</h2>
+          <p class="auth-intro">Create an account using the authorized administrator email. Confirm the email from your inbox, then log in with your password.</p>
+          <form id="admin-register-form" onsubmit="handleAdminRegister(event)">
+            <div class="form-group">
+              <label for="admin-name">Full Name</label>
+              <input type="text" id="admin-name" autocomplete="name" required />
+            </div>
+            <div class="form-group">
+              <label for="admin-phone">Phone Number</label>
+              <input type="tel" id="admin-phone" autocomplete="tel" />
+            </div>
+            <div class="form-group">
+              <label for="admin-email">Administrator Email</label>
+              <input type="email" id="admin-email" value="bmonari94@gmail.com" readonly />
+            </div>
+            <div class="form-group">
+              <label for="admin-password">Password</label>
+              <input type="password" id="admin-password" autocomplete="new-password" required />
+            </div>
+            <div class="form-group">
+              <label for="admin-confirm-password">Confirm Password</label>
+              <input type="password" id="admin-confirm-password" autocomplete="new-password" required />
+            </div>
+            <button type="submit" class="btn-submit">Create administrator account</button>
+          </form>
+          <p id="admin-access-feedback" class="auth-feedback" role="status" aria-live="polite"></p>
+          <button type="button" class="auth-back" onclick="showAuthForm('login')">Already have an account? Log in</button>
           <button type="button" class="auth-back" onclick="showAuthWelcome()">Back to welcome</button>
         </div>
       </div>
@@ -131,7 +167,7 @@
 
       <div class="grid-2 resident-report-grid">
         <!-- Submit Report Form -->
-        <div class="card resident-panel">
+        <div class="card resident-panel snake-light-frame">
           <div class="resident-panel-heading">
             <h2>Submit a report</h2>
             <p>Share a local issue so it can be reviewed by your community team.</p>
@@ -160,6 +196,8 @@
             <div class="form-group">
               <label>GPS Coordinates (Optional)</label>
               <input type="text" id="rep-coords" placeholder="-0.5167, 34.4500" />
+              <button type="button" id="rep-location-current" class="camera-button">Use current GPS location</button>
+              <p id="rep-location-status" class="evidence-status" aria-live="polite"></p>
             </div>
             <div class="form-group">
               <label>Description</label>
@@ -219,36 +257,57 @@
 
     <!-- 3. ADMIN DASHBOARD VIEW -->
     <div id="view-admin" class="view">
-      <h2>Administrative Control Center</h2>
+      <div class="admin-heading">
+        <div>
+          <p class="resident-kicker">COMMUNITY PORTAL / ADMINISTRATION</p>
+          <h2>Administrative Control Center</h2>
+          <p class="admin-description">Monitor community reports, update their status, and review resident submissions.</p>
+        </div>
+        <div class="admin-refresh">
+          <span id="admin-last-refreshed" aria-live="polite">Report data is ready.</span>
+          <button id="admin-refresh" class="camera-button" type="button" onclick="refreshAdminDashboard()">Refresh reports</button>
+        </div>
+      </div>
 
       <!-- Admin Summary Cards -->
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card admin-stat admin-stat-total">
           <h3 id="admin-stat-total">0</h3>
           <p>Total Community Reports</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card admin-stat admin-stat-submitted">
+          <h3 id="admin-stat-submitted">0</h3>
+          <p>Submitted</p>
+        </div>
+        <div class="stat-card admin-stat admin-stat-review">
           <h3 id="admin-stat-review">0</h3>
           <p>Under Review</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card admin-stat admin-stat-progress">
           <h3 id="admin-stat-progress">0</h3>
           <p>In Progress</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card admin-stat admin-stat-resolved">
           <h3 id="admin-stat-resolved">0</h3>
           <p>Resolved</p>
+        </div>
+        <div class="stat-card admin-stat admin-stat-rejected">
+          <h3 id="admin-stat-rejected">0</h3>
+          <p>Rejected</p>
         </div>
       </div>
 
       <!-- Interactive Map Visualization Placeholder -->
       <div class="map-container">
-        📍 Interactive GIS Report Coordinates Map View (Supabase GIS Integration)
+        <span aria-hidden="true">📍</span>
+        <span>Report locations and GPS coordinates are available in each report record.</span>
       </div>
 
       <!-- Filters & Search Bar -->
-      <div class="filter-bar">
-        <input type="text" id="admin-search" placeholder="Search by title or description..." oninput="renderAdminReports()" />
+      <div class="filter-bar admin-filter-bar">
+        <label class="visually-hidden" for="admin-search">Search reports</label>
+        <input type="search" id="admin-search" placeholder="Search title, description, location, or reporter..." oninput="renderAdminReports()" />
+        <label class="visually-hidden" for="admin-filter-status">Filter reports by status</label>
         <select id="admin-filter-status" onchange="renderAdminReports()">
           <option value="ALL">All Statuses</option>
           <option value="Submitted">Submitted</option>
@@ -260,8 +319,15 @@
       </div>
 
       <!-- Centralized Management Table -->
-      <div class="card">
-        <h2>Report Management Overview</h2>
+      <div class="card admin-reports-card">
+        <div class="admin-table-heading">
+          <div>
+            <h2>Report Management Overview</h2>
+            <p>Review each submission and change its status as work progresses.</p>
+          </div>
+          <span id="admin-results-count" class="admin-results-count" aria-live="polite"></span>
+        </div>
+        <p id="admin-status-feedback" class="admin-status-feedback" role="status" aria-live="polite"></p>
         <div class="table-container">
           <table>
             <thead>
@@ -271,10 +337,11 @@
                 <th>Category</th>
                 <th>Location</th>
                 <th>Submitted By</th>
+                <th>Date</th>
                 <th>Evidence</th>
                 <th>Status</th>
-                <th>Action State</th>
-                <th>Delete</th>
+                <th>Update Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="admin-reports-table">
@@ -330,13 +397,20 @@
       <form id="assistant-form" class="assistant-form">
         <label class="visually-hidden" for="assistant-input">Ask the community assistant</label>
         <input id="assistant-input" name="question" type="text" maxlength="1000" placeholder="Ask a question..." autocomplete="off" required />
+        <button id="assistant-voice" class="assistant-voice" type="button" aria-label="Start voice conversation" aria-pressed="false" title="Start voice conversation">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"></path>
+            <path d="M19 11a7 7 0 0 1-14 0M12 18v4m-4 0h8"></path>
+          </svg>
+        </button>
         <button id="assistant-send" type="submit" aria-label="Send question">Send</button>
       </form>
+      <p id="assistant-voice-status" class="assistant-voice-status" aria-live="polite">Voice conversation is off.</p>
       <p class="assistant-note">Please don't share passwords or sensitive personal details.</p>
     </div>
     <button id="assistant-toggle" class="assistant-toggle" type="button" aria-expanded="false" aria-controls="assistant-panel">
       <span class="assistant-toggle-mark" aria-hidden="true">AI</span>
-      <span>Ask Community AI</span>
+      <span>AI</span>
     </button>
   </section>
 
